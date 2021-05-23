@@ -6,12 +6,38 @@ Description
 -----------
 1. Add the character '~' to a short URL to display a preview page with QR code and Thumbnail image before redirection.
 2. On clicking a shortlink, land on a preview page, and wait for `N` seconds before auto redirection.
+3. You can find a preview button ![Preview Button](https://image.flaticon.com/icons/png/16/142/142336.png "Preview Button 16x16"), at the admin area.
 
 Requirements
 -----------
 The following plugins should already be installed and activated:
 1. [YOURLS QRCode](https://github.com/seandrickson/YOURLS-QRCode-Plugin) or [Google Chart API QR Code Plugin](https://github.com/YOURLS/YOURLS/wiki/Plugin-%3D-QRCode-ShortURL). If not found, an `QR NOT FOUND` image is displayed`
 2. [Thumbnail URL image](https://github.com/prog-it/yourls-thumbnail-url). If not found Preview Not Found image is displayed.
+3. If you have the plugin **404 If Not Found** activate, please remeber to edit the plugin file and add all functions which are triggered in other plugins as `loader_failed`. An example of the same is:
+
+```php
+...
+yourls_add_action('redirect_keyword_not_found', 'ozh_404_if_not_found');
+
+// 'keyword+' provided but this isnt an existing stat page
+yourls_add_action('infos_keyword_not_found', 'ozh_404_if_not_found');
+
+// 'keyword' not provided: direct attempt at http://sho.rt/yourls-go.php or -infos.php
+yourls_add_action('redirect_no_keyword', 'ozh_404_if_not_found');
+yourls_add_action('infos_no_keyword', 'ozh_404_if_not_found');
+
+// Display a default 404 not found page
+function ozh_404_if_not_found($request) {
+   // The QR Code generator, .qr.
+	if(function_exists('sean_yourls_qrcode'))
+		sean_yourls_qrcode( $request );
+   // Our plugin with tidle (~) character.
+	if(function_exists('formula21_preview_loader_failed'))
+		formula21_preview_loader_failed($request);
+    yourls_status_header(404);
+    ...
+}
+```
 
 Installation
 ------------
