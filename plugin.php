@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: Preview URL with preview Code and Thumbnail image
-Plugin URI: https://github.com/formula21/yourls-preview-url-with-previewcode-thumbnail/
-Description: Preview URLs before you're redirected there with preview code and Thumbnail image
+Plugin Name: Preview URL with QR Code and Thumbnail image
+Plugin URI: https://github.com/formula21/yourls-preview-url-with-qrcode-thumbnail/
+Description: Preview URLs before you're redirected there with QR code and Thumbnail image
 Version: 1.0
 Author: formula21
 Author URI: https://github.com/formula21
@@ -53,8 +53,8 @@ function formula21_preview_show( $keyword, $preview = false) {
 	$shorturl	= "$base/$keyword";
 	$longurl	= yourls_get_keyword_longurl( $keyword );
 	$char  		= formula21_PREVIEW_CHAR;
-	// Required this plugin - https://github.com/seandrickson/YOURLS-previewCode-Plugin
-	$previewcode 	= YOURLS_SITE.'/'.$keyword.'.preview';
+	// Required this plugin - https://github.com/seandrickson/YOURLS-QRCode-Plugin
+	$qrcode 	= YOURLS_SITE.'/'.$keyword.'.qr';
 	// Required this plugin - https://github.com/prog-it/yourls-thumbnail-url
 	$thumb		= YOURLS_SITE.'/'.$keyword.'.i';
 	if($preview){
@@ -97,7 +97,7 @@ function formula21_preview_show( $keyword, $preview = false) {
 		height: 245px;
 		border: 5px solid #151720;
 	}	
-	.short-preview {
+	.short-qr {
 		border: 1px solid #ccc;
 		width: 100px;
 		margin-top: 3px;
@@ -153,9 +153,9 @@ function formula21_preview_show( $keyword, $preview = false) {
 				<?php yourls_e('Title', 'formula21_translation'); ?>: <strong><?php echo $title; ?></strong>
 			</div>
 			<div>
-				<?php yourls_e('preview code', 'formula21_translation'); ?>:
+				<?php yourls_e('QR code', 'formula21_translation'); ?>:
 				<div>
-					<img class="short-preview" src="<?php echo yourls_esc_url( $previewcode ); ?>">
+					<img class="short-qr" src="<?php echo yourls_esc_url( $qrcode ); ?>">
 				</div>
 			</div>
 		</div>
@@ -171,7 +171,8 @@ function formula21_preview_show( $keyword, $preview = false) {
 ?>
 <hr>
 	<div class="disclaimer">
-		<?php yourls_e('You will be redirected to another page within '.PRE_REDIRECT_SECONDS.' seconds', 'formula21_translation'); ?>
+		<?php $l = ($secs>PRE_REDIRECT_SECONDS)?PRE_REDIRECT_SECONDS:$secs; ?>
+		<?php yourls_e('You will be redirected to another page within <strong>'.$l.'</strong> seconds', 'formula21_translation'); ?>
 	</div>
 <script>
 	let c = document.querySelectorAll(".loc-replace");
@@ -191,7 +192,7 @@ function formula21_preview_show( $keyword, $preview = false) {
 }
 
 
-// Add our preview Code Button to the Admin interface
+// Add our QR Code Button to the Admin interface
 yourls_add_filter( 'action_links', 'formula21_add_preview_button' );
 function formula21_add_preview_button( $action_links, $keyword, $url, $ip, $clicks, $timestamp ) {
 	$surl = yourls_link( $keyword );
@@ -201,7 +202,7 @@ function formula21_add_preview_button( $action_links, $keyword, $url, $ip, $clic
 	$preview = '~';
 	$previewlink = $surl . $preview;
 
-	// Define the preview Code
+	// Define the Preview Code
 	$previewcode = array(
 		'href'    => $previewlink,
 		'id'      => "previewlink-$id",
@@ -209,7 +210,7 @@ function formula21_add_preview_button( $action_links, $keyword, $url, $ip, $clic
 		'anchor'  => 'Preview'
 	);
 
-	// Add our preview code generator button to the action links list
+	// Add our Preview Code generator button to the action links list
 	$action_links .= sprintf( '<a href="%s" id="%s" title="%s" class="%s">%s</a>',
 		$previewlink, $previewcode['id'], $previewcode['title'], 'button button_previewcode', $previewcode['anchor']
 	);
