@@ -132,7 +132,12 @@ function formula21_preview_show( $keyword, $preview = false) {
 	<h2><?php yourls_e('Preview short URL', 'formula21_translation'); ?></h2>
 	<div class="halves">
 		<div class="half-width thumb-box">
-			<?php $onerror = YOURLS_SITE.'/user/plugins/yourls-preview-url-with-qrcode-thumbnail/image/No-Image-Placeholder.svg' ?>
+			<?php
+				$x = explode(DIRECTORY_SEPARATOR, __DIR__);
+				$y = array_search('user', $x);
+				$x = array_merge(array_splice($x, $y), ['image','No-Image-Placeholder.svg']);
+				$x = implode('/', $x);
+			<?php $onerror = YOURLS_SITE.'/'.$x ?>
 			<img class="short-thumb" src="<?php echo yourls_esc_url( $thumb ); ?>" onerror="this.src='<?php echo yourls_esc_url( $onerror );?>'">
 		</div>
 		<div class="half-width desc-box">
