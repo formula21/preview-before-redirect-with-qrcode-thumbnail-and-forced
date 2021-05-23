@@ -11,10 +11,11 @@ Author URI: https://github.com/formula21
 // Character to add to a short URL to trigger the preview interruption
 define( 'formula21_PREVIEW_CHAR', '~' );
 
+// Before redirect
+yourls_add_action('redirect_shorturl', 'formula21_preview_show_redirect');
+
 // Handle failed loader request and check if there's a ~
 yourls_add_action( 'loader_failed', 'formula21_preview_loader_failed' );
-
-yourls_add_action('pre_redirect', 'formula21_preview_show_redirect');
 
 function formula21_preview_loader_failed( $args ) {
 	yourls_load_custom_textdomain( 'formula21_translation', dirname( __FILE__ ) . '/languages' );
@@ -29,11 +30,17 @@ function formula21_preview_loader_failed( $args ) {
 }
 
 
-function formula21_preview_show_redirect( $keyword ){
+function formula21_preview_show_redirect( $args ){
 	if(defined("PRE_REDIRECT_PREVIEW") && PRE_REDIRECT_PREVIEW && defined("PRE_REDIRECT_SECONDS") && is_int(PRE_REDIRECT_SECONDS) && PRE_REDIRECT_SECONDS > 0){
-		// header( "refresh:PRE_REDIRECT_SECONDS+10;url=$longurl);
-		formula21_preview_show($keyword, true);
-		die();
+		$secs = PRE_REDIRECT_SECONDS + intval(PRE_REDIRECT_SECONDS / 2);
+		$request = $args[1];
+		$pattern = yourls_make_regexp_pattern( yourls_get_shorturl_charset() );
+		if( preg_match( "@^([$pattern]+)$@", $request, $matches ) ) {
+			$keyword = isset( $matches[1] ) ? $matches[1] : '';
+			$keyword = yourls_sanitize_keyword( $keyword );
+			formula21_preview_show($keyword, true);
+			die();
+		}		
 	}
 }
 
@@ -53,6 +60,17 @@ function formula21_preview_show( $keyword, $preview = false) {
 	$qrcode 	= YOURLS_SITE.'/'.$keyword.'.qr';
 	// Required this plugin - https://github.com/prog-it/yourls-thumbnail-url
 	$thumb		= YOURLS_SITE.'/'.$keyword.'.i';
+	if($preview){
+		$secs = PRE_REDIRECT_SECONDS + intval(PRE_REDIRECT_SECONDS / 2);
+		session_start();
+		$_SESSION['refresh_secs_url'] = time();
+		if(!isset($_SESSION['refresh_secs_url_end']) || $_SESSION['refresh_secs_url_end'] < $_SESSION['refresh_secs_url']){
+			$_SESSION['refresh_secs_url_end'] = time()+$secs;
+		}
+		$secs = $_SESSION['refresh_secs_url_end'] - $_SESSION['refresh_secs_url'];
+		$secs = $secs + 2;
+	}
+	header( "refresh:".$secs.";url=$longurl");
 	?>
 
 	<style>
@@ -122,11 +140,11 @@ function formula21_preview_show( $keyword, $preview = false) {
 		</div>
 		<div class="half-width desc-box">
 			<div>
-				<?php yourls_e($preview==false?'You requested a shortened URL','The preview for the shortened URL ', 'formula21_translation'); ?> <strong><?php echo yourls_esc_url( $shorturl ); ?></strong>
+				<?php yourls_e($preview==false?'You requested a shortened URL':'The preview for the shortened URL ', 'formula21_translation'); ?> <strong><?php echo yourls_esc_url( $shorturl ); ?></strong>
 				<p><?php yourls_e('This URL points to', 'formula21_translation'); ?>:</p>		
 			</div>
 			<div>
-				<?php yourls_e('Long URL', 'formula21_translation'); ?> : <strong><a href="<?php echo yourls_esc_url( $preview==false?$shorturl:$longurl ); ?>"><?php  echo yourls_esc_url( $longurl ); ?></a></strong>
+				<?php yourls_e('Long URL', 'formula21_translation'); ?> : <strong><a class="loc-replace" href="<?php echo yourls_esc_url( $preview==false?$shorturl:$longurl ); ?>"><?php  echo yourls_esc_url( $longurl ); ?></a></strong>
 			</div>
 			<div>
 				<?php yourls_e('Title', 'formula21_translation'); ?>: <strong><?php echo $title; ?></strong>
@@ -142,13 +160,29 @@ function formula21_preview_show( $keyword, $preview = false) {
 	<p>
 		<?php yourls_e('If you still want to visit this URL, please go to', 'formula21_translation'); ?> 
 		<strong>
-			<a href="<?php echo yourls_esc_url( $preview==false?$shorturl:$longurl ); ?>"><?php yourls_e('this URL', 'formula21_translation'); ?></a>
+			<a class="loc-replace" href="<?php echo yourls_esc_url( $preview==false?$shorturl:$longurl ); ?>"><?php yourls_e('this URL', 'formula21_translation'); ?></a>
 		</strong>.
 	</p>
-	<hr>
-	<div class="disclaimer">
-		<?php yourls_e('You will be redirected to another page. We are not responsible for the content of this page.', 'formula21_translation'); ?>
-	</div>
 <?php
+	if($preview){
+?>
+<hr>
+	<div class="disclaimer">
+		<?php yourls_e('You will be redirected to another page within '.PRE_REDIRECT_SECONDS.' seconds', 'formula21_translation'); ?>
+	</div>
+<script>
+	let c = document.querySelectorAll(".loc-replace");
+	c.forEach(function(a, b){
+		a.addEventListener('click', function(e){
+			e.preventDefault();
+			window.location.replace(this.href);
+		});
+	});
+	setTimeout(function(){
+		window.location.replace(<?php echo yourls_esc_url($longurl); ?>);
+	}, <?php echo $secs ?>)
+</script>
+<?php
+	}
 	yourls_html_footer();
 }
