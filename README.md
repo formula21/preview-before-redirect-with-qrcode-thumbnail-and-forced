@@ -1,4 +1,4 @@
-# Preview URL with QR Code and Thumbnail image
+# Preview URL with QR Code and Thumbnail image before Redirect for N - Seconds.
 
 Plugin for [YOURLS](http://yourls.org) `1.5+`. Tested on YOURLS 1.7.2
 
@@ -9,8 +9,8 @@ Add the character '~' to a short URL to display a preview page with QR code and 
 Requirements
 -----------
 The following plugins should already be installed and activated:
-1. [YOURLS QRCode](https://github.com/seandrickson/YOURLS-QRCode-Plugin) or [Google Chart API QR Code Plugin](https://github.com/YOURLS/YOURLS/wiki/Plugin-%3D-QRCode-ShortURL)
-2. [Thumbnail URL image](https://github.com/prog-it/yourls-thumbnail-url)
+1. [YOURLS QRCode](https://github.com/seandrickson/YOURLS-QRCode-Plugin) or [Google Chart API QR Code Plugin](https://github.com/YOURLS/YOURLS/wiki/Plugin-%3D-QRCode-ShortURL) or replace the function with your own function.
+2. [Thumbnail URL image](https://github.com/prog-it/yourls-thumbnail-url) or replace function with own function.
 
 Installation
 ------------
