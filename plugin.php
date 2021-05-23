@@ -11,12 +11,8 @@ Author URI: https://github.com/formula21
 // Character to add to a short URL to trigger the preview interruption
 define( 'formula21_PREVIEW_CHAR', '~' );
 
-// Before redirect
-yourls_add_action('redirect_shorturl', 'formula21_preview_show_redirect');
-
 // Handle failed loader request and check if there's a ~
 yourls_add_action( 'loader_failed', 'formula21_preview_loader_failed' );
-
 function formula21_preview_loader_failed( $args ) {
 	yourls_load_custom_textdomain( 'formula21_translation', dirname( __FILE__ ) . '/languages' );
 	$request = $args[0];
@@ -29,7 +25,8 @@ function formula21_preview_loader_failed( $args ) {
 	}
 }
 
-
+// Before redirect
+yourls_add_action('redirect_shorturl', 'formula21_preview_show_redirect');
 function formula21_preview_show_redirect( $args ){
 	if(defined("PRE_REDIRECT_PREVIEW") && PRE_REDIRECT_PREVIEW && defined("PRE_REDIRECT_SECONDS") && is_int(PRE_REDIRECT_SECONDS) && PRE_REDIRECT_SECONDS > 0){
 		$secs = PRE_REDIRECT_SECONDS + intval(PRE_REDIRECT_SECONDS / 2);
@@ -185,4 +182,55 @@ function formula21_preview_show( $keyword, $preview = false) {
 <?php
 	}
 	yourls_html_footer();
+}
+
+
+// Add our QR Code Button to the Admin interface
+yourls_add_filter( 'action_links', 'formula21_add_preview_button' );
+function formula21_add_preview_button( $action_links, $keyword, $url, $ip, $clicks, $timestamp ) {
+	$surl = yourls_link( $keyword );
+	$id = yourls_string2htmlid( $keyword ); // used as HTML #id
+
+	// We're adding .qr to the end of the URL, right?
+	$preview = '~';
+	$previewlink = $surl . $preview;
+
+	// Define the QR Code
+	$previewcode = array(
+		'href'    => $previewlink,
+		'id'      => "previewlink-$id",
+		'title'   => 'Preview',
+		'anchor'  => 'Preview'
+	);
+
+	// Add our QR code generator button to the action links list
+	$action_links .= sprintf( '<a href="%s" id="%s" title="%s" class="%s">%s</a>',
+		$previewlink, $previewcode['id'], $previewcode['title'], 'button button_previewcode', $previewcode['anchor']
+	);
+
+  return $action_links;
+}
+
+
+
+// Add the CSS to <head>
+yourls_add_action( 'html_head', 'formula21_add_preview_css_head' );
+function formula21_add_preview_css_head( $context ) {
+
+	// expose what page we are on
+	foreach($context as $k):
+
+		// If we are on the index page, use this css code for the button
+		if( $k == 'index' ):
+?>
+<style type="text/css">
+	td.actions .button_previewcode {
+		margin-right: 0;
+		margin-left: 5px;
+		background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA30lEQVQ4T5VTvRrCIBBLXN10cvYZfQuf0dlJJ1fP7/4oUPpjh3JAG5JcIPyRGGNgvfQGcGr3p5l+mQBZl10CEsiLIP4TIRDMAIJG0nkBOPdMVhkAFFdXJM1ANgBm5ylgw9QmoXUkoUdIOrVPlQekeuGWMPBEcABuX+A+8uo/BnbAQELl9qjdVUaKZUVuFOa2WZ0vXUkxHWrjQw+waVqfm/CAorZN+c2ykGqA666t58DacbwAn2ci9C3fESR3wxJJzybIh4hcI0OTV96lXO4vKGFCFYZUvQayJ30LN9k79wPrOV8R4y7I7QAAAABJRU5ErkJggg==) no-repeat 2px 50%;
+	}
+</style>
+<?php
+		endif;
+	endforeach;
 }
